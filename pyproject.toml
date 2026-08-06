@@ -5,6 +5,7 @@ description = "Django REST API boilerplate with JWT auth and OpenAPI"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "celery[redis]>=5.6.3",
     "dj-database-url>=3.1.2",
     "django>=6.0.7",
     "django-cors-headers>=4.9.0",

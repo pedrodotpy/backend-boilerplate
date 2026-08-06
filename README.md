@@ -4,7 +4,7 @@ Login-gated Django REST API with JWT, custom email `User`, DRF, and OpenAPI (`dr
 
 Companion frontend: `../react-boilerplate`. Shared SPECS: `../fullstack-bootstrap/specs/`.
 
-**Docker-first:** Postgres, the API, and pytest all run via Docker Compose. Make wraps Compose.
+**Docker-first:** Postgres, Redis, the API, Celery worker, and pytest all run via Docker Compose. Make wraps Compose.
 
 ## Setup
 
@@ -14,10 +14,10 @@ cp config/settings/local.py.example config/settings/local.py
 make build
 make migrate
 make createsuperuser
-make run
+make up              # db + redis + backend + worker
 ```
 
-API: `http://localhost:8000`.
+API: `http://localhost:8000`. Auth emails (OTP / password reset) are sent by the Celery worker; use `make up` for full local mail, or `make run` + `make worker` in two terminals.
 
 ## Common commands
 
@@ -25,9 +25,11 @@ API: `http://localhost:8000`.
 make migrate
 make makemigrations
 make schema          # writes schema.yml for the React OpenAPI client
-make test            # pytest API E2E (Postgres via Compose)
+make test            # pytest API E2E (Postgres via Compose; Celery eager)
 make seed-e2e        # users for React Playwright (admin + viewer + extras)
-make run
+make up              # db + redis + backend + worker
+make run             # db + redis + backend
+make worker          # Celery worker only
 ```
 
 Add dependencies inside the container:

@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from apps.email_server.models import SMTPServer
+from apps.email_server.tasks import queue_mail
 from apps.users.email_auth import CODE_EXPIRY_MINUTES, EmailAuthCode
 
 
@@ -22,7 +22,7 @@ def create_and_send_auth_code(*, user, purpose: str) -> EmailAuthCode:
         if purpose == EmailAuthCode.Purpose.LOGIN
         else "Your password reset code"
     )
-    SMTPServer.objects.get_current().send_mail(
+    queue_mail(
         subject=subject,
         to=user.email,
         template="users/email/auth_code.html",
