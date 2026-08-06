@@ -4,6 +4,29 @@ info:
   version: 0.1.0
   description: Login-gated Django REST API with JWT and model-level permissions
 paths:
+  /api/v1/auth/forgot-password/:
+    post:
+      operationId: auth_forgot_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ForgotPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ForgotPassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '204':
+          description: Always empty (anti-enumeration).
   /api/v1/auth/logout/:
     post:
       operationId: auth_logout_create
@@ -44,23 +67,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
-  /api/v1/auth/token/:
+  /api/v1/auth/resend-code/:
     post:
-      operationId: auth_token_create
-      description: JWT obtain using email + password (USERNAME_FIELD=email).
+      operationId: auth_resend_code_create
       tags:
       - auth
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/ResendCode'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/ResendCode'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/ResendCode'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeRequired'
+          description: ''
+  /api/v1/auth/reset-password/:
+    post:
+      operationId: auth_reset_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '204':
+          description: Password updated.
+  /api/v1/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: JWT obtain using email + password. May return a 2FA challenge instead.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtain'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtain'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtain'
         required: true
       security:
       - {}
@@ -69,8 +142,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenObtainPair'
-          description: ''
+                $ref: '#/components/schemas/TokenPair'
+              examples:
+                JWTPair:
+                  value:
+                    access: '...'
+                    refresh: '...'
+                  summary: JWT pair
+          description: JWT pair when LOGIN_2FA_ENABLED is false.
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeRequired'
+              examples:
+                2FAChallenge:
+                  value:
+                    challenge_id: 00000000-0000-0000-0000-000000000001
+                    destination: u***@example.com
+                  summary: 2FA challenge
+          description: 2FA challenge when LOGIN_2FA_ENABLED is true.
   /api/v1/auth/token/refresh/:
     post:
       operationId: auth_token_refresh_create
@@ -99,6 +190,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/verify-code/:
+    post:
+      operationId: auth_verify_code_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyCode'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VerifyCode'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VerifyCode'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
           description: ''
   /api/v1/users/:
     get:
@@ -266,6 +384,38 @@ paths:
           description: No response body
 components:
   schemas:
+    ChallengeRequired:
+      type: object
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        destination:
+          type: string
+      required:
+      - challenge_id
+      - destination
+    EmailTokenObtain:
+      type: object
+      description: Authenticate with email + password; optionally defer JWT for 2FA.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    ForgotPassword:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
     Logout:
       type: object
       properties:
@@ -336,25 +486,46 @@ components:
         is_staff:
           type: boolean
           description: Designates whether the user can log into the admin site.
-    TokenObtainPair:
+    ResendCode:
+      type: object
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+      required:
+      - challenge_id
+    ResetPassword:
       type: object
       properties:
         email:
           type: string
-          writeOnly: true
-        password:
+          format: email
+        code:
+          type: string
+          maxLength: 6
+          minLength: 6
+        new_password:
           type: string
           writeOnly: true
+          minLength: 8
+        confirm_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - code
+      - confirm_password
+      - email
+      - new_password
+    TokenPair:
+      type: object
+      properties:
         access:
           type: string
-          readOnly: true
         refresh:
           type: string
-          readOnly: true
       required:
       - access
-      - email
-      - password
       - refresh
     TokenRefresh:
       type: object
@@ -459,6 +630,19 @@ components:
       required:
       - email
       - id
+    VerifyCode:
+      type: object
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          maxLength: 6
+          minLength: 6
+      required:
+      - challenge_id
+      - code
   securitySchemes:
     jwtAuth:
       type: http

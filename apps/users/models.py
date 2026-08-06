@@ -37,3 +37,9 @@ class User(AbstractBaseUser, PermissionsMixin, IndexedTimeStampedModel):
 
     def get_short_name(self):
         return self.email
+
+
+# Imported last so AUTH_USER_MODEL resolves for EmailAuthCode.
+from apps.users.email_auth import EmailAuthCode  # noqa: E402, F401
+
+__all__ = ["User", "EmailAuthCode"]

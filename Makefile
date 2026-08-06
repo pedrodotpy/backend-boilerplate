@@ -1,22 +1,31 @@
-.PHONY: migrate makemigrations schema test run createsuperuser seed-e2e
+.PHONY: migrate makemigrations schema test run run-2fa createsuperuser seed-e2e build
+
+COMPOSE ?= docker compose
+BACKEND = $(COMPOSE) run --rm backend
+
+build:
+	$(COMPOSE) build
 
 migrate:
-	uv run python manage.py migrate
+	$(BACKEND) uv run python manage.py migrate
 
 makemigrations:
-	uv run python manage.py makemigrations
+	$(BACKEND) uv run python manage.py makemigrations
 
 schema:
-	uv run python manage.py spectacular --file schema.yml
+	$(BACKEND) uv run python manage.py spectacular --file schema.yml
 
 test:
-	uv run pytest
+	$(BACKEND) uv run pytest
 
 run:
-	uv run python manage.py runserver
+	$(COMPOSE) up backend
+
+run-2fa:
+	LOGIN_2FA_ENABLED=True $(COMPOSE) up backend
 
 createsuperuser:
-	uv run python manage.py createsuperuser
+	$(BACKEND) uv run python manage.py createsuperuser
 
 seed-e2e:
-	uv run python manage.py seed_e2e --extra-users 15
+	$(BACKEND) uv run python manage.py seed_e2e --extra-users 15

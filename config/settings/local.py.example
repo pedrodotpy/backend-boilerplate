@@ -1,3 +1,7 @@
 from .base import *  # noqa: F403
 
 DEBUG = True
+
+# Write outbound mail to disk instead of hitting a real SMTP server.
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = BASE_DIR / "sent_emails"  # noqa: F405

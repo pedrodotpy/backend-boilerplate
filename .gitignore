@@ -14,6 +14,7 @@ wheels/
 config/settings/local.py
 db.sqlite3
 *.sqlite3
+sent_emails/
 
 # IDE / OS
 .idea/

@@ -1,0 +1,15 @@
+---
+description: Core fullstack conventions for Django API + React SPA (django/react boilerplate templates)
+alwaysApply: true
+---
+
+# Fullstack conventions
+
+- Backend package manager: **uv** only (`uv add` / `uv add --dev`).
+- Frontend package manager: **yarn** only (`yarn add` / `yarn add -D`).
+- Sibling repos: `django-boilerplate` (Django) and `react-boilerplate` (Vite SPA).
+- API contract: `make schema` → `schema.yml` → `yarn openapi-ts`. Never hand-edit `src/shared/api`.
+- Auth: JWT only; keep the product private (no public marketing routes; only `/login` and token endpoints are anonymous).
+- Tests are mandatory: unfinished without matching E2E (pytest API / Playwright live Django). Do not ask whether to write them.
+- Prefer E2E tests over duplicate unit tests for the same behavior.
+- Follow `../fullstack-bootstrap/specs/05-agent-conventions.md` and `../fullstack-bootstrap/specs/04-crud-pattern.md`.

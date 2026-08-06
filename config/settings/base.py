@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "apps.common",
+    "apps.email_server",
     "apps.users",
 ]
 
@@ -115,3 +116,12 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
 }
+
+# When True, POST /api/v1/auth/token/ emails a one-time code and withholds JWT
+# until POST /api/v1/auth/verify-code/. When False, token/ returns JWT immediately.
+LOGIN_2FA_ENABLED = config("LOGIN_2FA_ENABLED", default=False, cast=bool)
+
+# Default production/staging backend. Local overrides to filebased.
+# SMTP host/user/password come from apps.email_server.SMTPServer at send time.
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="App <noreply@example.com>")

@@ -1,0 +1,15 @@
+---
+description: Mandatory E2E testing for Django API + React SPA
+alwaysApply: true
+---
+
+# Testing is mandatory
+
+Do **not** ask whether the user wants tests. Shipping code without matching E2E coverage is unfinished.
+
+- **Backend:** new/changed API behavior → pytest under `apps/<app>/tests/` → `make test` green. Tests must run independently (in-memory SQLite via test settings).
+- **Frontend:** new/changed auth/CRUD/permissions UI → Playwright under `e2e/` against **live Django** → `yarn test:e2e` green (seeded backend running).
+- Prefer E2E over duplicate unit tests for the same behavior.
+- Login 2FA Playwright suite: Django `make run-2fa`, then frontend `make test-e2e-2fa`.
+
+See `../fullstack-bootstrap/specs/05-agent-conventions.md`.
